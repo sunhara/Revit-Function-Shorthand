@@ -1,3 +1,3 @@
 # Revit-Function-Shorthand
-This the a collection of Revit funtions for some specific workflow 
+This is a collection of some Revit funtions for some specific workflows(could be useless(○´･д･)ﾉ) 
 Help yourself😄
