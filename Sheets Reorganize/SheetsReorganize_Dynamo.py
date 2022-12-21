@@ -5,21 +5,12 @@ import clr
 import sys 
 #sys is a fundamental Python library - here, we're using it to load in
 #the standard IronPython libraries
-
-sys.path.append('C:\Program Files (x86)\IronPython 2.7\Lib') #Imports the
-#standard IronPython libraries, which cover everything from servers and
-#encryption through to regular expressions.
-
 import System #The System namespace at the root of .NET
 from System import Array #.NET class for handling array information
 from System.Collections.Generic import * #Lets you handle generics. Revit's API
 #sometimes wants hard-typed 'generic' lists, called ILists. If you don't need
 #these you can delete this line.
 
-clr.AddReference('ProtoGeometry')  #A Dynamo library for its proxy geometry
-#classes. You'll only need this if you're interacting with geometry.
-from Autodesk.DesignScript.Geometry import * #Loads everything in Dynamo's
-#geometry library
 clr.AddReference("RevitNodes") #Dynamo's nodes for Revit
 
 import Revit #Loads in the Revit namespace in RevitNodes
@@ -57,7 +48,7 @@ dataEnteringNode = IN
 def createList(r1, r2):
     return list(range(r1, r2+1))
      
-# Driver Code
+
 
 # Place your code below this line
 all_Sheets = FilteredElementCollector(doc)
@@ -65,18 +56,27 @@ all_Sheets.OfCategory(BuiltInCategory.OST_Sheets)
 all_Sheets.WhereElementIsNotElementType()
 all_Sheets_Ele = all_Sheets.ToElements()
 
+indicat = all_Sheets_Ele[0].LookupParameter("Sheet Number").AsString()
+indicator = indicat.startswith("FB")
+
 sheetsNum = []
 
 for i in all_Sheets_Ele:
     num = i.LookupParameter("Sheet Number")
+       
     numValue = num.AsString()
-   
-    sheetsNum.append(float(numValue))
+    
+    if  indicator:
+        numValue1 = numValue.strip("FB") 
+        
+        sheetsNum.append(float(numValue1))
+    else:
+        sheetsNum.append(float(numValue))
 
 
-
+# Get the sheets number as index
 indices = sorted(range(len(sheetsNum)), key = lambda index: sheetsNum[index])
-renumber = createList(1,len(indices))
+renumber = createList(1,len(indices))  #rename with the renumber
 
 
 TransactionManager.Instance.EnsureInTransaction(doc)
@@ -84,9 +84,13 @@ TransactionManager.Instance.EnsureInTransaction(doc)
 for i,j in zip(indices,renumber):
      num2 = all_Sheets_Ele[i].LookupParameter("Sheet Number")
      numstr = str(j)
-     num2.Set(numstr)
-    
+     
+     if indicator:
+        num2.Set(numstr)
+     else:
+        num2.Set("FB"+numstr)
+     
 
 TransactionManager.Instance.TransactionTaskDone()
 # Assign your output to the OUT variable.
-OUT = all_Sheets_Ele,indices,sheetsNum,renumber
+OUT = indicator,indicat,sheetsNum
